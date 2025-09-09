@@ -72,109 +72,21 @@ class LeaderboardManager:
     
     async def create_normal_mode_content(self, channel, guild_id: int):
         try:
-
-            has_content = False
-            async for message in channel.history(limit=50):
-                if message.author == self.bot.user and message.embeds:
-                    embed = message.embeds[0]
-                    if embed.title and ("Boss Progression" in embed.title or "Leaderboard" in embed.title):
-                        has_content = True
-                        break
-            
+            has_content = await self._check_existing_content(channel)
             if not has_content:
-
-                normal_embed = discord.Embed(
-                    title="🛡️ Normal Mode Boss Progression",
-                    description="Obor → Phosani's Nightmare",
-                    color=discord.Color.blue()
-                )
-                
-                normal_max = self.boss_service.get_max_bosses_for_mode("normal")
-                
-
-                normal_text1 = ""
-                for i in range(min(23, normal_max)):
-                    boss_name = self.boss_service.get_boss_name(i)
-                    normal_text1 += f"{i+1}. **{boss_name}**\n"
-                
-                normal_embed.add_field(
-                    name="Bosses 1-23",
-                    value=normal_text1,
-                    inline=True
-                )
-                
-
-                if normal_max > 23:
-                    normal_text2 = ""
-                    for i in range(23, normal_max):
-                        boss_name = self.boss_service.get_boss_name(i)
-                        normal_text2 += f"{i+1}. **{boss_name}**\n"
-                    
-                    normal_embed.add_field(
-                        name="Bosses 24-46",
-                        value=normal_text2,
-                        inline=True
-                    )
-                
-                normal_embed.set_footer(text="Normal Mode: Perfect for most players!")
-                
-
-                await channel.send(embed=normal_embed)
+                embed = self._create_boss_list_embed("normal")
+                await channel.send(embed=embed)
                 await self.ensure_mode_leaderboard(channel, guild_id, "normal")
-                
         except Exception as e:
             print(f"Error creating normal mode content: {e}")
     
     async def create_hard_mode_content(self, channel, guild_id: int):
         try:
-
-            has_content = False
-            async for message in channel.history(limit=50):
-                if message.author == self.bot.user and message.embeds:
-                    embed = message.embeds[0]
-                    if embed.title and ("Boss Progression" in embed.title or "Leaderboard" in embed.title):
-                        has_content = True
-                        break
-            
+            has_content = await self._check_existing_content(channel)
             if not has_content:
-
-                hard_embed = discord.Embed(
-                    title="💀 Hard Mode Boss Progression",
-                    description="Obor → Sol Heredit (All 50 bosses)",
-                    color=discord.Color.red()
-                )
-                
-
-                hard_text1 = ""
-                for i in range(min(25, len(self.boss_service.boss_list))):
-                    boss_name = self.boss_service.get_boss_name(i)
-                    hard_text1 += f"{i+1}. **{boss_name}**\n"
-                
-                hard_embed.add_field(
-                    name="Bosses 1-25",
-                    value=hard_text1,
-                    inline=True
-                )
-                
-
-                if len(self.boss_service.boss_list) > 25:
-                    hard_text2 = ""
-                    for i in range(25, len(self.boss_service.boss_list)):
-                        boss_name = self.boss_service.get_boss_name(i)
-                        hard_text2 += f"{i+1}. **{boss_name}**\n"
-                    
-                    hard_embed.add_field(
-                        name="Bosses 26-50",
-                        value=hard_text2,
-                        inline=True
-                    )
-                
-                hard_embed.set_footer(text="Hard Mode: For the bravest challengers!")
-                
-
-                await channel.send(embed=hard_embed)
+                embed = self._create_boss_list_embed("hard")
+                await channel.send(embed=embed)
                 await self.ensure_mode_leaderboard(channel, guild_id, "hard")
-                
         except Exception as e:
             print(f"Error creating hard mode content: {e}")
     
@@ -312,7 +224,7 @@ class LeaderboardManager:
                             assigned = self.db.get_next_extreme_boss(guild_id, user_data['user_id'])
                             next_boss = assigned or "🎲 Random Boss"
                         medal = self.get_rank_medal(i)
-                        text += f"{medal} **{username}** - {progress} defeated | Next: {next_boss}\n"
+                        text += f"{medal} **{username}** - {progress} defeated | Current: {next_boss}\n"
                     embed.add_field(name="Rankings", value=text, inline=False)
                 else:
                     embed.add_field(name="No active participants",
@@ -329,7 +241,7 @@ class LeaderboardManager:
                     description=f"{mode_info['description']}",
                     color=color
                 )
-                # Finished section
+                # Completed section
                 if finalized:
                     fin_text = ""
                     for i, row in enumerate(finalized, 1):
@@ -345,13 +257,13 @@ class LeaderboardManager:
                             when_fmt = f"<t:{unix_ts}:f>"
                         except Exception:
                             pass
-                        fin_text += f"{medal} **{username}** • finished at {when_fmt}\n"
-                    embed.add_field(name="🏁 Finished", value=fin_text, inline=False)
+                        fin_text += f"{medal} **{username}** • completed at {when_fmt}\n"
+                    embed.add_field(name="🏁 Completed", value=fin_text, inline=False)
                 else:
-                    embed.add_field(name="🏁 Finished", value="No finishers yet", inline=False)
+                    embed.add_field(name="🏁 Completed", value="No completions yet", inline=False)
                 # Divider
                 embed.add_field(name="\u200b", value="— — —", inline=False)
-                # In-progress section
+                # Progress section
                 if live:
                     prog_text = ""
                     for user_data in live[:10]:
@@ -359,9 +271,9 @@ class LeaderboardManager:
                         progress = user_data['progress']
                         next_boss = self.boss_service.get_next_boss_for_difficulty(progress, mode) or "🎉 COMPLETED!"
                         prog_text += f"• **{username}** — {progress} defeated | Next: {next_boss}\n"
-                    embed.add_field(name="⏳ In Progress", value=prog_text, inline=False)
+                    embed.add_field(name="⏳ Progress", value=prog_text, inline=False)
                 else:
-                    embed.add_field(name="⏳ In Progress", value="No active participants", inline=False)
+                    embed.add_field(name="⏳ Progress", value="No active participants", inline=False)
                 embed.set_footer(text="Last updated")
                 embed.timestamp = discord.utils.utcnow()
             
@@ -415,7 +327,7 @@ class LeaderboardManager:
                 if mode == "extreme":
                     match_title = f"Extreme Mode Live Progress"
                 else:
-                    match_title = f"{mode.title()} Mode Finished Leaderboard"
+                    match_title = f"{mode.title()} Mode Leaderboard"
                 if embed.title and match_title in embed.title:
                     self.db.store_discord_resource(guild_id, resource_type, message.id, {'mode': mode})
                     return message
@@ -453,7 +365,7 @@ class LeaderboardManager:
                     assigned = self.db.get_next_extreme_boss(guild_id, user_data['user_id'])
                     next_boss = assigned or "🎲 Random Boss"
                 medal = self.get_rank_medal(i)
-                text += f"{medal} **{username}** - {progress} defeated | Next: {next_boss}\n"
+                text += f"{medal} **{username}** - {progress} defeated | Current: {next_boss}\n"
             embed.add_field(name="Rankings", value=text, inline=False)
         else:
             embed.add_field(name="No active participants",
@@ -500,7 +412,7 @@ class LeaderboardManager:
                 username = await self.get_user_display_name(guild_id, user_data['user_id'])
                 progress = user_data['progress']
                 next_boss = self.boss_service.get_next_boss_for_difficulty(progress, mode) or "🎉 COMPLETED!"
-                prog_text += f"• **{username}** — {progress} defeated | Next: {next_boss}\n"
+                prog_text += f"• **{username}** — {progress} defeated | Current: {next_boss}\n"
             embed.add_field(name="⏳ In Progress", value=prog_text, inline=False)
         else:
             embed.add_field(name="⏳ In Progress", value="No active participants", inline=False)

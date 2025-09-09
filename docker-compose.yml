@@ -1,19 +1,13 @@
 version: '3.8'
 
 services:
-  discord-bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  boss-challenge-bot:
+    image: ghcr.io/ainsley2007/boss-challenge:latest
     container_name: boss-challenge-bot
     restart: unless-stopped
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
     volumes:
       - ./data:/app/data
-    networks:
-      - bot-network
-
-networks:
-  bot-network:
-    driver: bridge
+    labels:
+      - com.centurylinklabs.watchtower.enable=true

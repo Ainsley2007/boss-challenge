@@ -4,6 +4,7 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from bot.services.boss_progression import BossProgressionService
 
 load_dotenv()
 
@@ -29,10 +30,14 @@ class EventBot(commands.Bot):
     async def ensure_leaderboard_channels(self):
         for guild in self.guilds:
             category = await self.ensure_boss_challenge_category(guild)
+            svc = BossProgressionService()
+            easy_count = svc.get_max_bosses_for_mode("easy")
+            normal_count = svc.get_max_bosses_for_mode("normal")
+            hard_count = svc.get_max_bosses_for_mode("hard")
             difficulties = [
-                ("easy", "🌱", "Easy Mode Challenge - Obor to TOA 150 Invocation (25 bosses)"),
-                ("normal", "🛡️", "Normal Mode Challenge - Obor to Phosani's Nightmare (45 bosses)"),
-                ("hard", "🔥", "Hard Mode Challenge - Obor to Sol Heredit (50 bosses)"),
+                ("easy", "🌱", f"Easy Mode Challenge - Obor to TOA 150 Invocation ({easy_count} bosses)"),
+                ("normal", "🛡️", f"Normal Mode Challenge - Obor to Phosani's Nightmare ({normal_count} bosses)"),
+                ("hard", "🔥", f"Hard Mode Challenge - Obor to Sol Heredit ({hard_count} bosses)"),
                 ("extreme", "💀", "Extreme Mode Challenge - Corrupted Hunleff to Infinite Random")
             ]
             for difficulty, emoji, topic in difficulties:
@@ -247,6 +252,10 @@ class EventBot(commands.Bot):
                 )
                 
                 if not has_event_embed:
+                    svc = BossProgressionService()
+                    easy_count = svc.get_max_bosses_for_mode("easy")
+                    normal_count = svc.get_max_bosses_for_mode("normal")
+                    hard_count = svc.get_max_bosses_for_mode("hard")
                     event_embed = discord.Embed(
                         title="📖 About the Boss Challenge",
                         description="Progress through RuneScape bosses in order. Complete one boss, move to the next.",
@@ -254,17 +263,17 @@ class EventBot(commands.Bot):
                     )
                     event_embed.add_field(
                         name="🌱 Easy Mode", 
-                        value="25 bosses: Obor → TOA 150 Invocation", 
+                        value=f"{easy_count} bosses: Obor → TOA 150 Invocation", 
                         inline=True
                     )
                     event_embed.add_field(
                         name="🛡️ Normal Mode", 
-                        value="45 bosses: Obor → Phosani's Nightmare", 
+                        value=f"{normal_count} bosses: Obor → Phosani's Nightmare", 
                         inline=True
                     )
                     event_embed.add_field(
                         name="🔥 Hard Mode", 
-                        value="50 bosses: Obor → Sol Heredit", 
+                        value=f"{hard_count} bosses: Obor → Sol Heredit", 
                         inline=True
                     )
                     event_embed.add_field(

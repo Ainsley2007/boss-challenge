@@ -29,10 +29,10 @@ class EventCog(commands.Cog):
     @app_commands.command(name="join", description="Join the RuneScape boss progression challenge")
     @app_commands.describe(mode="Challenge difficulty: Easy, Normal, Hard, or Extreme")
     @app_commands.choices(mode=[
-        app_commands.Choice(name="🌱 Easy Mode (Obor → TOA 150 Invocation)", value="easy"),
-        app_commands.Choice(name="🛡️ Normal Mode (Obor → Phosani's Nightmare)", value="normal"),
-        app_commands.Choice(name="🔥 Hard Mode (Obor → Sol Heredit)", value="hard"),
-        app_commands.Choice(name="💀 Extreme Mode (Corrupted Hunleff → Infinite)", value="extreme")
+        app_commands.Choice(name="🌱 Easy Mode", value="easy"),
+        app_commands.Choice(name="🛡️ Normal Mode", value="normal"),
+        app_commands.Choice(name="🔥 Hard Mode", value="hard"),
+        app_commands.Choice(name="💀 Extreme Mode", value="extreme")
     ])
     async def join(self, interaction: discord.Interaction, mode: str):
         if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
@@ -65,18 +65,7 @@ class EventCog(commands.Cog):
             return
         await self.submit_cmd.submit(interaction, before, after)
 
-    @app_commands.command(name="set_progress", description="[Admin/Test] Set your progress to second-to-last boss for a difficulty")
-    @app_commands.describe(difficulty="Difficulty to set progress for")
-    @app_commands.choices(difficulty=[
-        app_commands.Choice(name="🌱 Easy", value="easy"),
-        app_commands.Choice(name="🛡️ Normal", value="normal"),
-        app_commands.Choice(name="🔥 Hard", value="hard"),
-        app_commands.Choice(name="💀 Extreme", value="extreme"),
-    ])
-    async def set_progress(self, interaction: discord.Interaction, difficulty: str = "hard"):
-        if not interaction.user.guild_permissions.manage_guild:
-            await interaction.response.send_message("❌ You don't have permission to use this.", ephemeral=True)
-            return
+    
     @app_commands.command(name="unlock", description="[Admin] Unlock all commands for this server")
     async def unlock(self, interaction: discord.Interaction):
         if not interaction.user.guild_permissions.manage_guild:

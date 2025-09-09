@@ -35,21 +35,21 @@ class EventCog(commands.Cog):
         app_commands.Choice(name="💀 Extreme Mode", value="extreme")
     ])
     async def join(self, interaction: discord.Interaction, mode: str):
-        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+        if self.db.is_guild_locked(interaction.guild_id):
             await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
             return
         await self.join_cmd.join(interaction, mode)
     
     @app_commands.command(name="leave", description="Leave the boss progression challenge")
     async def leave(self, interaction: discord.Interaction):
-        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+        if self.db.is_guild_locked(interaction.guild_id):
             await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
             return
         await self.leave_cmd.leave(interaction)
     
     @app_commands.command(name="reset", description="Reset your boss progression (if you died)")
     async def reset(self, interaction: discord.Interaction):
-        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+        if self.db.is_guild_locked(interaction.guild_id):
             await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
             return
         await self.reset_cmd.reset(interaction)
@@ -60,7 +60,7 @@ class EventCog(commands.Cog):
         after="After image - your loot/rewards after killing the boss"
     )
     async def submit(self, interaction: discord.Interaction, before: discord.Attachment, after: discord.Attachment):
-        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+        if self.db.is_guild_locked(interaction.guild_id):
             await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
             return
         await self.submit_cmd.submit(interaction, before, after)

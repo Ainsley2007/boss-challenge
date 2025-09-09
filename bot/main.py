@@ -47,20 +47,10 @@ class EventBot(commands.Bot):
             await self.position_category_channels(guild, category)
     
     async def ensure_boss_challenge_category(self, guild):
-        legacy_name = "Boss Challenge"
         styled_name = "╔═══Boss Challenge═══╗"
-        existing_styled = discord.utils.get(guild.categories, name=styled_name)
-        if existing_styled:
-            return existing_styled
-        existing_legacy = discord.utils.get(guild.categories, name=legacy_name)
-        if existing_legacy:
-            try:
-                await existing_legacy.edit(name=styled_name)
-                return existing_legacy
-            except discord.Forbidden:
-                return existing_legacy
-            except Exception:
-                return existing_legacy
+        existing = discord.utils.get(guild.categories, name=styled_name)
+        if existing:
+            return existing
         try:
             category = await guild.create_category(styled_name)
             return category
@@ -217,13 +207,6 @@ class EventBot(commands.Bot):
             base_name = "boss-challenge-info"
             full_name = f"{info_icon}・{base_name}"
             info_channel = discord.utils.get(guild.text_channels, name=full_name)
-            legacy_info_channel = discord.utils.get(guild.text_channels, name=base_name)
-            if not info_channel and legacy_info_channel:
-                try:
-                    await legacy_info_channel.edit(name=full_name, category=category)
-                    info_channel = legacy_info_channel
-                except discord.Forbidden:
-                    info_channel = legacy_info_channel
             if not info_channel:
                 info_channel = await guild.create_text_channel(full_name, category=category)
                 from bot.db.tiny import get_database

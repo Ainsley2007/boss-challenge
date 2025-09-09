@@ -35,14 +35,23 @@ class EventCog(commands.Cog):
         app_commands.Choice(name="💀 Extreme Mode (Corrupted Hunleff → Infinite)", value="extreme")
     ])
     async def join(self, interaction: discord.Interaction, mode: str):
+        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
+            return
         await self.join_cmd.join(interaction, mode)
     
     @app_commands.command(name="leave", description="Leave the boss progression challenge")
     async def leave(self, interaction: discord.Interaction):
+        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
+            return
         await self.leave_cmd.leave(interaction)
     
     @app_commands.command(name="reset", description="Reset your boss progression (if you died)")
     async def reset(self, interaction: discord.Interaction):
+        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
+            return
         await self.reset_cmd.reset(interaction)
     
     @app_commands.command(name="submit", description="Submit a boss kill with before/after screenshots")
@@ -51,6 +60,9 @@ class EventCog(commands.Cog):
         after="After image - your loot/rewards after killing the boss"
     )
     async def submit(self, interaction: discord.Interaction, before: discord.Attachment, after: discord.Attachment):
+        if self.db.is_guild_locked(interaction.guild_id) and not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
+            return
         await self.submit_cmd.submit(interaction, before, after)
 
     @app_commands.command(name="set_progress", description="[Admin/Test] Set your progress to second-to-last boss for a difficulty")
@@ -65,17 +77,21 @@ class EventCog(commands.Cog):
         if not interaction.user.guild_permissions.manage_guild:
             await interaction.response.send_message("❌ You don't have permission to use this.", ephemeral=True)
             return
-        total = self.boss_service.get_max_bosses_for_mode(difficulty)
-        if total == -1:
-            await interaction.response.send_message("❌ Extreme has no fixed end.", ephemeral=True)
+    @app_commands.command(name="unlock", description="[Admin] Unlock all commands for this server")
+    async def unlock(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message("❌ You don't have permission to use this.", ephemeral=True)
             return
-        target = max(0, total - 1)
-        self.db.set_user_progress(interaction.guild_id, interaction.user.id, target, difficulty)
-        channel_name = f"boss-challenge-{difficulty}"
-        channel = discord.utils.get(interaction.guild.text_channels, name=channel_name)
-        if channel:
-            await self.leaderboard_manager.update_mode_leaderboard(channel, interaction.guild_id, difficulty)
-        await interaction.response.send_message(f"Set your {difficulty} progress to {target}/{total}.", ephemeral=True)
+        self.db.set_guild_locked(interaction.guild_id, False)
+        await interaction.response.send_message("✅ Server unlocked. All commands are now available.", ephemeral=True)
+
+    @app_commands.command(name="lock", description="[Admin] Lock all participant commands for this server")
+    async def lock(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message("❌ You don't have permission to use this.", ephemeral=True)
+            return
+        self.db.set_guild_locked(interaction.guild_id, True)
+        await interaction.response.send_message("🔒 Server locked. Only admins can use commands.", ephemeral=True)
     
     async def create_normal_mode_content(self, channel, guild_id: int):
         await self.leaderboard_manager.create_normal_mode_content(channel, guild_id)

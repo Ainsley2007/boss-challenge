@@ -122,7 +122,6 @@ class LeaderboardManager:
         
         embed = discord.Embed(
             title=f"{mode_info['emoji']} {mode_info['name']} Boss Progression",
-            description=mode_info['description'],
             color=color
         )
         
@@ -155,7 +154,6 @@ class LeaderboardManager:
                     inline=True
                 )
         
-        embed.set_footer(text=f"{mode_info['name']}: {mode_info['description']}")
         return embed
     
     def _format_boss_list(self, boss_list):
@@ -172,21 +170,17 @@ class LeaderboardManager:
     
     async def ensure_mode_leaderboard(self, channel, guild_id: int, mode: str):
         try:
-            # Check if we have a stored message ID for this mode
             resource_type = f"leaderboard_{mode}"
             stored_message_id = self.db.get_discord_resource(guild_id, resource_type)
             
             if stored_message_id:
                 try:
-                    # Try to fetch the stored message
                     stored_message = await channel.fetch_message(stored_message_id)
                     # Message exists and is accessible, we're good
                     return
                 except:
-                    # Message was deleted, remove from storage
                     self.db.remove_discord_resource(guild_id, resource_type)
             
-            # Create initial leaderboard message and store its ID
             message = await self.create_initial_leaderboard(channel, guild_id, mode)
             if message:
                 self.db.store_discord_resource(guild_id, resource_type, message.id, {'mode': mode})
@@ -206,7 +200,6 @@ class LeaderboardManager:
             color = color_map.get(mode_info['color_name'], discord.Color.blue())
             
             if mode == "extreme":
-                # Combine active and archived for extreme so past leavers remain visible
                 live = self.db.get_extreme_live_with_archive(guild_id)
                 embed = discord.Embed(
                     title=f"{mode_info['emoji']} Extreme Mode Live Progress",
@@ -220,7 +213,6 @@ class LeaderboardManager:
                         progress = user_data['progress']
                         next_boss = self.boss_service.get_next_boss_for_difficulty(progress, mode)
                         if not next_boss:
-                            # fall back to assigned next extreme boss if exists
                             assigned = self.db.get_next_extreme_boss(guild_id, user_data['user_id'])
                             next_boss = assigned or "🎲 Random Boss"
                         medal = self.get_rank_medal(i)
@@ -241,7 +233,6 @@ class LeaderboardManager:
                     description=f"{mode_info['description']}",
                     color=color
                 )
-                # Completed section
                 if finalized:
                     fin_text = ""
                     for i, row in enumerate(finalized, 1):
@@ -261,9 +252,7 @@ class LeaderboardManager:
                     embed.add_field(name="🏁 Completed", value=fin_text, inline=False)
                 else:
                     embed.add_field(name="🏁 Completed", value="No completions yet", inline=False)
-                # Divider
                 embed.add_field(name="\u200b", value="— — —", inline=False)
-                # Progress section
                 if live:
                     prog_text = ""
                     for user_data in live[:10]:
@@ -277,7 +266,6 @@ class LeaderboardManager:
                 embed.set_footer(text="Last updated")
                 embed.timestamp = discord.utils.utcnow()
             
-            # Send the message and return the message object
             message = await channel.send(embed=embed)
             return message
             
@@ -352,7 +340,6 @@ class LeaderboardManager:
         live = self.db.get_extreme_live_with_archive(guild_id)
         embed = discord.Embed(
             title=f"{mode_info['emoji']} Extreme Mode Live Progress",
-            description=f"Live rankings - {mode_info['description']}",
             color=color
         )
         if live:
@@ -380,7 +367,6 @@ class LeaderboardManager:
         live = self.db.get_live_leaderboard(guild_id, mode)
         embed = discord.Embed(
             title=f"{mode_info['emoji']} {mode_info['name']} Leaderboard",
-            description=f"{mode_info['description']}",
             color=color
         )
         

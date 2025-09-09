@@ -245,6 +245,15 @@ class EventDatabase:
             (Resource.guild_id == guild_id) & (Resource.resource_type == resource_type)
         )
         return len(removed) > 0
+
+    def set_guild_locked(self, guild_id: int, locked: bool) -> None:
+        self.store_discord_resource(guild_id, "guild_locked", 1 if locked else 0)
+
+    def is_guild_locked(self, guild_id: int) -> bool:
+        value = self.get_discord_resource(guild_id, "guild_locked")
+        if value is None:
+            return True
+        return int(value) == 1
     
     def close(self):
         self.db.close()

@@ -25,7 +25,9 @@ WORKDIR /app
 # Copy Python packages and app from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /app/bot ./bot
-COPY --from=builder /app/data ./data
+
+# Create data directory (will be mounted as volume)
+RUN mkdir -p /app/data
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1

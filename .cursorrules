@@ -1,0 +1,37 @@
+# Discord Event Bot - Cursor Rules
+
+## Always Apply: true
+
+## Python Style
+- Use snake_case for functions and variables
+- Group imports: standard library, third-party, local imports
+- Avoid comments; code should be self-documenting
+- Keep functions short (<80 lines of code)
+
+## Discord.py Conventions
+- Use discord.py v2+ with app_commands for slash commands
+- Prefer app_commands with guild sync for slash commands
+- Use ephemeral responses for confirmations
+- Use embeds for leaderboard displays
+
+## Code Conventions
+- Explicit input validation for all user inputs
+- Idempotent operations (safe if repeated)
+- Avoid global state; use database adapter instead
+- Commands should be short and focused
+
+## Project Structure
+- Entry point: bot/main.py (loads cogs, ensures channels, syncs commands)
+- Event commands: bot/cogs/event.py (slash commands: /join, /leave, /reset, /complete)
+- Database layer: bot/db/tiny.py (TinyDB adapter with required API)
+
+## Database Design
+- participants table: { guild_id, user_id, progress }
+- submissions table: { guild_id, user_id, step, before_url, after_url, ts }
+- Required API functions: is_joined, join_user, leave_user, reset_user, add_completion
+
+## Command Requirements
+- All Discord commands must be slash commands using app_commands
+- Validate image attachments for /complete command
+- Ensure #event-leaderboard channel exists in all guilds
+- Handle errors gracefully with user-friendly messages

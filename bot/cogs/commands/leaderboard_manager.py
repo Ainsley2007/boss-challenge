@@ -203,7 +203,6 @@ class LeaderboardManager:
                 live = self.db.get_extreme_live_with_archive(guild_id)
                 embed = discord.Embed(
                     title=f"{mode_info['emoji']} Extreme Mode Live Progress",
-                    description=f"Live rankings - {mode_info['description']}",
                     color=color
                 )
                 if live:
@@ -230,7 +229,6 @@ class LeaderboardManager:
                 live = self.db.get_live_leaderboard(guild_id, mode)
                 embed = discord.Embed(
                     title=f"{mode_info['emoji']} {mode_info['name']} Leaderboard",
-                    description=f"{mode_info['description']}",
                     color=color
                 )
                 if finalized:

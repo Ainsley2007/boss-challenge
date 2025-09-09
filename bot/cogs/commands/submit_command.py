@@ -150,7 +150,7 @@ class SubmitCommand:
             title = (
                 f"🎉 {mode_info['name']} Completed!" if is_completed and user_mode != "extreme" else "⚔️ Boss Defeated!"
             )
-            description = f"**{interaction.user.display_name}** defeated **{defeated_boss}**! ({mode_info['emoji']} {mode_info['name']})"
+            description = f"**{interaction.user.display_name}** defeated **{defeated_boss}**! ({mode_info['emoji']})"
             
             if is_completed and user_mode != "extreme":
                 description += "\n🎊 **Congratulations on completing this difficulty!**"
@@ -160,27 +160,28 @@ class SubmitCommand:
                 description=description,
                 color=color
             )
+            total = self.boss_service.get_max_bosses_for_mode(user_mode)
+            total_text = "∞" if total == -1 else str(total)
             embed.add_field(
-                name="📈 Progression", 
-                value=f"**{new_progress}** bosses defeated", 
+                name="Progression", 
+                value=f"**{new_progress}/{total_text}**", 
                 inline=True
             )
             if not is_completed or user_mode == "extreme":
                 embed.add_field(
-                    name="🏆 Rank", 
+                    name="Rank", 
                     value=f"#{self.leaderboard_manager.get_user_mode_rank(interaction.guild_id, interaction.user.id, user_mode)}", 
                     inline=True
                 )
             if next_boss:
                 embed.add_field(
-                    name="🎯 Next Boss", 
-                    value=f"**{next_boss}**", 
+                    name="Up next", 
+                    value=f"{next_boss}", 
                     inline=True
                 )
             
             embed.set_image(url=after.url)
             embed.set_thumbnail(url=before.url)
-            embed.set_footer(text=f"{defeated_boss} defeated • Gear (small) | Loot (large)")
             embed.timestamp = discord.utils.utcnow()
             
             await completions_channel.send(embed=embed)

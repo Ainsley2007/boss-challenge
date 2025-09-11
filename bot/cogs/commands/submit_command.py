@@ -17,7 +17,6 @@ class SubmitCommand:
     async def submit(
         self, 
         interaction: discord.Interaction, 
-        before: discord.Attachment, 
         after: discord.Attachment
     ):
         guild_id = interaction.guild_id
@@ -31,14 +30,7 @@ class SubmitCommand:
             return
         
         valid_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-        
-        if before.content_type not in valid_types:
-            await interaction.response.send_message(
-                f"❌ Before attachment must be an image. Got: {before.content_type}",
-                ephemeral=True
-            )
-            return
-            
+
         if after.content_type not in valid_types:
             await interaction.response.send_message(
                 f"❌ After attachment must be an image. Got: {after.content_type}",
@@ -52,21 +44,18 @@ class SubmitCommand:
             current_progress = self.db.get_user_progress(guild_id, user_id)
             boss_number = current_progress + 1
             
-            before_path = await self.image_service.upload_from_url(
-                before.url, guild_id, user_id, "before", boss_number
-            )
             after_path = await self.image_service.upload_from_url(
                 after.url, guild_id, user_id, "after", boss_number
             )
             
-            if not before_path or not after_path:
+            if not after_path:
                 await interaction.followup.send(
-                    "❌ Failed to save images. Please try again.",
+                    "❌ Failed to save the image. Please try again.",
                     ephemeral=True
                 )
                 return
             
-            success = self.db.add_completion(guild_id, user_id, before_path, after_path)
+            success = self.db.add_completion(guild_id, user_id, after_path)
             
             if success:
                 new_progress = self.db.get_user_progress(guild_id, user_id)
@@ -89,7 +78,7 @@ class SubmitCommand:
                     ephemeral=True
                 )
                 
-                await self._post_boss_completion(interaction, before, after, boss_number, new_progress, user_mode, is_completed, rolled_next)
+                await self._post_boss_completion(interaction, after, boss_number, new_progress, user_mode, is_completed, rolled_next)
             else:
                 await interaction.followup.send(
                     "❌ Failed to record boss kill. Please try again.",
@@ -103,7 +92,7 @@ class SubmitCommand:
                 ephemeral=True
             )
     
-    async def _post_boss_completion(self, interaction, before, after, boss_number, new_progress, user_mode, is_completed=False, rolled_next: str | None = None):
+    async def _post_boss_completion(self, interaction, after, boss_number, new_progress, user_mode, is_completed=False, rolled_next: str | None = None):
         completions_channel_id = self.db.get_discord_resource(interaction.guild_id, "completions")
         completions_channel = None
         if completions_channel_id:
@@ -181,7 +170,6 @@ class SubmitCommand:
                 )
             
             embed.set_image(url=after.url)
-            embed.set_thumbnail(url=before.url)
             embed.timestamp = discord.utils.utcnow()
             
             await completions_channel.send(embed=embed)

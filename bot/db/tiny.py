@@ -55,7 +55,7 @@ class EventDatabase:
         )
         return True
     
-    def add_completion(self, guild_id: int, user_id: int, before_url: str, after_url: str) -> bool:
+    def add_completion(self, guild_id: int, user_id: int, after_url: str) -> bool:
         if not self.is_joined(guild_id, user_id):
             return False
         
@@ -76,7 +76,6 @@ class EventDatabase:
             'guild_id': guild_id,
             'user_id': user_id,
             'step': new_progress,
-            'before_url': before_url,
             'after_url': after_url,
             'ts': current_time
         })

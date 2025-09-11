@@ -54,16 +54,15 @@ class EventCog(commands.Cog):
             return
         await self.reset_cmd.reset(interaction)
     
-    @app_commands.command(name="submit", description="Submit a boss kill with before/after screenshots")
+    @app_commands.command(name="submit", description="Submit your boss kill: upload the Items Kept on Death total value screenshot")
     @app_commands.describe(
-        before="Before image - your gear/inventory before fighting the boss",
-        after="After image - your loot/rewards after killing the boss"
+        after="After image showing the total value from Items Kept on Death"
     )
-    async def submit(self, interaction: discord.Interaction, before: discord.Attachment, after: discord.Attachment):
+    async def submit(self, interaction: discord.Interaction, after: discord.Attachment):
         if self.db.is_guild_locked(interaction.guild_id):
             await interaction.response.send_message("🔒 This server's challenge is locked. An admin must use /unlock.", ephemeral=True)
             return
-        await self.submit_cmd.submit(interaction, before, after)
+        await self.submit_cmd.submit(interaction, after)
 
     
     @app_commands.command(name="unlock", description="[Admin] Unlock all commands for this server")
